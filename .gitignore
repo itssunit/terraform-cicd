@@ -38,3 +38,5 @@ terraform.rc
 
 *.tfstate
 *.terraform.tfstate.backup
+
+*.txt
