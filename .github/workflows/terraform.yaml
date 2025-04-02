@@ -1,0 +1,51 @@
+name: "Terraform Deployment"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Configure AWS OIDC Credentials"
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: "Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: "Terraform Init"
+        run: terraform init
+
+      - name: "Terraform Validate"
+        run: terraform validate
+
+      - name: "Terraform Security Check (tfsec)"
+        uses: aquasecurity/tfsec-action@v1.0.0
+
+      - name: "Terraform Plan"
+        run: terraform plan -out=tfplan
+        continue-on-error: true
+
+      - name: "Terraform Apply"
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
+
