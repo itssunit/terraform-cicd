@@ -13,7 +13,7 @@ resource "aws_s3_bucket" "terraform_state" {
   }
 }
 
-# Enable Versioning on S3
+# Enable Versioning on S3:
 resource "aws_s3_bucket_versioning" "versioning" {
   bucket = aws_s3_bucket.terraform_state.id
   versioning_configuration {
