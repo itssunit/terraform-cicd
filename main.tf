@@ -120,6 +120,11 @@ resource "aws_iam_policy" "terraform_state_policy" {
       "Effect": "Allow",
       "Action": ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:DeleteItem"],
       "Resource": "arn:aws:dynamodb:us-east-1:123456789012:table/terraform-state-locks"
+    },
+    { 
+      "Effect": "Allow",
+      "Action": ["iam:GetRole", "iam:GetPolicy"],
+      "Resource": "*"
     }
   ]
 }
