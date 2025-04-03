@@ -123,7 +123,12 @@ resource "aws_iam_policy" "terraform_state_policy" {
     },
     { 
       "Effect": "Allow",
-      "Action": ["iam:GetRole", "iam:GetPolicy"],
+      "Action": ["iam:GetRole", "iam:GetPolicy","iam:CreatePolicyVersion","iam:UpdateAssumeRolePolicy"],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["ec2:RunInstances"],
       "Resource": "*"
     }
   ]
