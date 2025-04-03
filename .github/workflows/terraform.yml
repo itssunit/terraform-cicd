@@ -1,51 +1,43 @@
-name: "Terraform Deployment"
+name: Terraform Destroy
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  workflow_dispatch:  # Manual trigger only to avoid accidental deletion
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  terraform:
-    name: "Terraform Apply"
+  destroy:
+    name: Destroy Terraform Resources
     runs-on: ubuntu-latest
 
+    env:
+      AWS_REGION: us-east-1
+      TF_VAR_environment: production  # Ensure correct environment
+      TF_INPUT: false  # Prevent interactive prompts
+
     steps:
-      - name: "Checkout Repository"
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: "Configure AWS OIDC Credentials"
-        uses: aws-actions/configure-aws-credentials@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: arn:aws:iam::989557614958:role/TerraformGitHubActionsRole
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: "Setup Terraform"
+      - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.0
 
-      - name: "Terraform Init"
-        run: terraform init
+      - name: Initialize Terraform
+        run: terraform init -backend-config="bucket=terraform-state-prod-1234567890" -backend-config="key=terraform.tfstate" -backend-config="region=us-east-1"
 
-      - name: "Terraform Validate"
-        run: terraform validate
+      - name: Select Terraform Workspace
+        run: terraform workspace select production || terraform workspace new production
 
-      # - name: "Terraform Security Check (tfsec)"
-      #   uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Plan Destroy (Preview)
+        run: terraform plan -destroy -out=destroy.plan
 
-      - name: "Terraform Plan"
-        run: terraform plan -out=tfplan
-        continue-on-error: true
-
-      - name: "Terraform Apply"
-        if: github.ref == 'refs/heads/master'
-        run: terraform apply -auto-approve tfplan
-
+      - name: Apply Destroy (Confirm)
+        run: terraform apply -auto-approve destroy.plan
