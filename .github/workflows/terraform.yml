@@ -33,11 +33,14 @@ jobs:
       - name: Initialize Terraform
         run: terraform init -backend-config="bucket=terraform-state-prod-1234567890" -backend-config="key=terraform.tfstate" -backend-config="region=us-east-1"
 
-      - name: Select Terraform Workspace
-        run: terraform workspace select production || terraform workspace new production
+      # - name: Select Terraform Workspace
+      #   run: terraform workspace select production || terraform workspace new production
 
       - name: Plan Destroy (Preview)
         run: terraform plan -destroy -out=destroy.plan
 
       - name: Apply Destroy (Confirm)
         run: terraform apply -auto-approve destroy.plan
+
+      - name: destroy
+        run: terraform destroy -auto-approve
